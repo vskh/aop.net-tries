@@ -11,8 +11,4 @@
       <ProjectReference Include="..\TestUtil\TestUtil.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="IPuresharp" Version="5.0.5" />
-    </ItemGroup>
-
 </Project>

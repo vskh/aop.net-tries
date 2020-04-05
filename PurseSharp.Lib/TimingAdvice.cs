@@ -5,18 +5,22 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using Puresharp;
+using TestUtil;
 
 namespace PurseSharp.Lib
 {
-	public class TimingAdvice : IAdvice
+	public class TimingAdvice : IAdvice, ILoggerTrait
 	{
 		private Stopwatch m_timer;
 		private readonly MethodBase m_method;
 
 
-		public TimingAdvice(MethodBase method)
+		public TimingAdvice(MethodBase method, bool shouldLog = true)
 		{
+			ShouldLog = shouldLog;
 			m_method = method;
+			
+			_Log("Created.");
 		}
 
 
@@ -27,6 +31,7 @@ namespace PurseSharp.Lib
 
 		public void Instance<T>(T value)
 		{
+			_Log($"Bound to instance {value.GetHashCode()}.");
 		}
 
 
@@ -37,6 +42,7 @@ namespace PurseSharp.Lib
 
 		public void Begin()
 		{
+			_Log($"{m_method.DeclaringType?.Name}::{m_method.Name} is starting execution");
 			m_timer = Stopwatch.StartNew();
 		}
 
@@ -60,9 +66,8 @@ namespace PurseSharp.Lib
 		{
 			m_timer.Stop();
 
-			Console.WriteLine(
-				$"[{nameof(TimingAspect)}] " +
-				$"{m_method.DeclaringType?.Name}::{m_method.Name} finished abnormally in {m_timer.ElapsedMilliseconds} ms.");
+			_Log($"{m_method.DeclaringType?.Name}::{m_method.Name} finished abnormally in {m_timer.ElapsedMilliseconds} ms " +
+				$"with exception '{exception.Message}'.");
 		}
 
 
@@ -70,9 +75,8 @@ namespace PurseSharp.Lib
 		{
 			m_timer.Stop();
 
-			Console.WriteLine(
-				$"[{nameof(TimingAspect)}] " +
-				$"{m_method.DeclaringType?.Name}::{m_method.Name} finished abnormally in {m_timer.ElapsedMilliseconds} ms.");
+			_Log($"{m_method.DeclaringType?.Name}::{m_method.Name} finished abnormally in {m_timer.ElapsedMilliseconds} ms " +
+			    $"and returned {value}.");
 		}
 
 
@@ -80,9 +84,7 @@ namespace PurseSharp.Lib
 		{
 			m_timer.Stop();
 
-			Console.WriteLine(
-				$"[{nameof(TimingAspect)}] " +
-				$"{m_method.DeclaringType?.Name}::{m_method.Name} finished normally in {m_timer.ElapsedMilliseconds} ms.");
+			_Log($"{m_method.DeclaringType?.Name}::{m_method.Name} finished normally in {m_timer.ElapsedMilliseconds} ms.");
 		}
 
 
@@ -90,9 +92,17 @@ namespace PurseSharp.Lib
 		{
 			m_timer.Stop();
 
-			Console.WriteLine(
-				$"[{nameof(TimingAspect)}] " +
-				$"{m_method.DeclaringType?.Name}::{m_method.Name} finished normally in {m_timer.ElapsedMilliseconds} ms and returned '{value}'.");
+			_Log($"{m_method.DeclaringType?.Name}::{m_method.Name} finished normally in {m_timer.ElapsedMilliseconds} ms " +
+			    $"and returned '{value}'.");
 		}
+
+
+		private void _Log(string msg)
+		{
+			(this as ILoggerTrait).Log(msg);
+		}
+
+
+		public bool ShouldLog { get; set; } = true;
 	}
 }
